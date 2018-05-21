@@ -25,9 +25,11 @@ import tensorflow as tf
 from lib.config import config as cfg
 from lib.utils.nms_wrapper import nms
 from lib.utils.test import im_detect
-#from nets.resnet_v1 import resnetv1
+# from nets.resnet_v1 import resnetv1
 from lib.nets.vgg16 import vgg16
 from lib.utils.timer import Timer
+
+image_name_glob = ""
 
 CLASSES = ('__background__',
            'baby')
@@ -36,19 +38,20 @@ NETS = {'vgg16': ('vgg16_faster_rcnn_iter_40000.ckpt',), 'res101': ('res101_fast
 DATASETS = {'pascal_voc': ('voc_2007_trainval',), 'pascal_voc_0712': ('voc_2007_trainval+voc_2012_trainval',)}
 
 
-def vis_detections(im, class_name, dets, thresh=0.5):
+def vis_detections(im, class_name, dets, result_file, image_name, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
         return
 
-    im = im[:, :, (2, 1, 0)]
-    fig, ax = plt.subplots(figsize=(12, 12))
-    ax.imshow(im, aspect='equal')
+    # im = im[:, :, (2, 1, 0)]
+    # fig, ax = plt.subplots(figsize=(12, 12))
+    # ax.imshow(im, aspect='equal')
     for i in inds:
         bbox = dets[i, :4]
         score = dets[i, -1]
 
+    '''
         ax.add_patch(
             plt.Rectangle((bbox[0], bbox[1]),
                           bbox[2] - bbox[0],
@@ -66,14 +69,22 @@ def vis_detections(im, class_name, dets, thresh=0.5):
                  fontsize=14)
     plt.axis('off')
     plt.tight_layout()
-    plt.draw()
+    # plt.draw()
+    # plt.show()
+    '''
+    result_file.write(image_name.replace('.jpg', '') +
+                      ' ' + str(score) + ' ' + class_name +
+                      ' ' + str(bbox[0]) + ' ' + str(bbox[1]) +
+                      ' ' + str(bbox[2]) + ' ' + str(bbox[3]) + "\n")
+    # result_file.close()
 
 
-def demo(sess, net, image_name):
+def demo(sess, net, image_name, result_file):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.FLAGS2["data_dir"], 'demo', image_name)
+    # im_file = os.path.join(cfg.FLAGS2["data_dir"], 'demo', image_name)
+    im_file = r"data/VOCdevkit2007/VOC2007/JPEGImages/" + image_name
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
@@ -94,7 +105,7 @@ def demo(sess, net, image_name):
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+        vis_detections(im, cls, dets, result_file, image_name, thresh=CONF_THRESH)
 
 
 def parse_args():
@@ -131,7 +142,7 @@ if __name__ == '__main__':
     # load network
     if demonet == 'vgg16':
         net = vgg16(batch_size=1)
-    # elif demonet == 'res101':
+        # elif demonet == 'res101':
         # net = resnetv1(batch_size=1, num_layers=101)
     else:
         raise NotImplementedError
@@ -144,10 +155,14 @@ if __name__ == '__main__':
 
     print('Loaded network {:s}'.format(tfmodel))
 
-    im_names = ['000004.jpg', '000005.jpg', '000006.jpg', '000007.jpg']
-    for im_name in im_names:
+    file = open(r"data/VOCdevkit2007/VOC2007/ImageSets/Main/test.txt")
+    result = open(r"data/VOCdevkit2007/results/VOC2007/Main/result1.txt", 'w')
+    while 1:
+        im_name = file.readline().replace('\n', '') + ".jpg"
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Demo for data/demo/{}'.format(im_name))
-        demo(sess, net, im_name)
+        if im_name == '.jpg':
+            break
+        demo(sess, net, im_name, result)
 
-    plt.show()
+    result.close()

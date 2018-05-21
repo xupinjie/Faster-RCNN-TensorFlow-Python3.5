@@ -53,7 +53,7 @@ class Network(object):
                           cols[3] / height,
                           cols[2] / width], axis=1)
         # add batch dimension (assume batch_size==1)
-        #assert image.get_shape()[0] == 1
+        # assert image.get_shape()[0] == 1
         boxes = tf.expand_dims(boxes, dim=0)
         image = tf.image.draw_bounding_boxes(image, boxes)
 
@@ -77,7 +77,8 @@ class Network(object):
             # change the channel to the caffe format
             to_caffe = tf.transpose(bottom, [0, 3, 1, 2])
             # then force it to have channel 2
-            reshaped = tf.reshape(to_caffe, tf.concat(axis=0, values=[[self._batch_size], [num_dim, -1], [input_shape[2]]]))
+            reshaped = tf.reshape(to_caffe,
+                                  tf.concat(axis=0, values=[[self._batch_size], [num_dim, -1], [input_shape[2]]]))
             # then swap the channel back
             to_tf = tf.transpose(reshaped, [0, 2, 3, 1])
             return to_tf
@@ -126,7 +127,8 @@ class Network(object):
             # Won't be backpropagated to rois anyway, but to save time
             bboxes = tf.stop_gradient(tf.concat([y1, x1, y2, x2], axis=1))
             pre_pool_size = cfg.FLAGS.roi_pooling_size * 2
-            crops = tf.image.crop_and_resize(bottom, bboxes, tf.to_int32(batch_ids), [pre_pool_size, pre_pool_size], name="crops")
+            crops = tf.image.crop_and_resize(bottom, bboxes, tf.to_int32(batch_ids), [pre_pool_size, pre_pool_size],
+                                             name="crops")
 
         return slim.max_pool2d(crops, [2, 2], padding='SAME')
 
@@ -202,7 +204,8 @@ class Network(object):
         in_box_diff = bbox_inside_weights * box_diff
         abs_in_box_diff = tf.abs(in_box_diff)
         smoothL1_sign = tf.stop_gradient(tf.to_float(tf.less(abs_in_box_diff, 1. / sigma_2)))
-        in_loss_box = tf.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign + (abs_in_box_diff - (0.5 / sigma_2)) * (1. - smoothL1_sign)
+        in_loss_box = tf.pow(in_box_diff, 2) * (sigma_2 / 2.) * smoothL1_sign + (abs_in_box_diff - (0.5 / sigma_2)) * (
+        1. - smoothL1_sign)
         out_loss_box = bbox_outside_weights * in_loss_box
         loss_box = tf.reduce_mean(tf.reduce_sum(
             out_loss_box,
@@ -258,7 +261,8 @@ class Network(object):
 
         return loss
 
-    def create_architecture(self, sess, mode, num_classes, tag=None, anchor_scales=(8, 16, 32), anchor_ratios=(0.5, 1, 2)):
+    def create_architecture(self, sess, mode, num_classes, tag=None, anchor_scales=(8, 16, 32),
+                            anchor_ratios=(0.5, 1, 2)):
         self._image = tf.placeholder(tf.float32, shape=[self._batch_size, None, None, 3])
         self._im_info = tf.placeholder(tf.float32, shape=[self._batch_size, 3])
         self._gt_boxes = tf.placeholder(tf.float32, shape=[None, 5])
@@ -280,7 +284,8 @@ class Network(object):
         assert tag != None
 
         # handle most of the regularizer here
-        weights_regularizer = tf.contrib.layers.l2_regularizer(cfg.FLAGS.weight_decay)
+        # weights_regularizer = tf.contrib.layers.l2_regularizer(cfg.FLAGS.weight_decay)
+        weights_regularizer = tf.contrib.layers.l2_regularizer(0.0005)
         if cfg.FLAGS.bias_decay:
             biases_regularizer = weights_regularizer
         else:

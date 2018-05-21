@@ -1,4 +1,5 @@
 import time
+import sys
 
 import numpy as np
 import tensorflow as tf
@@ -11,18 +12,21 @@ from lib.datasets.imdb import imdb as imdb2
 from lib.layer_utils.roi_data_layer import RoIDataLayer
 from lib.nets.vgg16 import vgg16
 from lib.utils.timer import Timer
+from lib.logs.redirection import __redirection__
 
 try:
-  import cPickle as pickle
+    import cPickle as pickle
 except ImportError:
-  import pickle
+    import pickle
 import os
+
 
 def get_training_roidb(imdb):
     """Returns a roidb (Region of Interest database) for use in training."""
     if True:
-        print('Appending horizontally-flipped training examples...')
-        imdb.append_flipped_images()
+        # print('Appending horizontally-flipped training examples...')
+        # change
+        # imdb.append_flipped_images()
         print('done')
 
     print('Preparing training data...')
@@ -57,11 +61,25 @@ def combined_roidb(imdb_names):
     return imdb, roidb
 
 
+def logs(r_obj):
+    # redirect to console
+    r_obj.to_console()
+
+    # redirect to file
+    r_obj.to_file(r'output/logs1.log')
+
+    # flush buffer
+    r_obj.flush()
+
+    # reset
+    r_obj.reset()
+
+
 class Train:
     def __init__(self):
 
         # Create network
-        if cfg.FLAGS.network == 'vgg16':
+        if cfg.FLAGS.net == 'vgg16':
             self.net = vgg16(batch_size=cfg.FLAGS.ims_per_batch)
         else:
             raise NotImplementedError
@@ -70,7 +88,6 @@ class Train:
 
         self.data_layer = RoIDataLayer(self.roidb, self.imdb.num_classes)
         self.output_dir = cfg.get_output_dir(self.imdb, 'default')
-
 
     def train(self):
 
@@ -107,7 +124,7 @@ class Train:
                 train_op = optimizer.apply_gradients(gvs)
 
             # We will handle the snapshots ourselves
-            self.saver = tf.train.Saver(max_to_keep=100000)
+            self.saver = tf.train.Saver(max_to_keep=100)
             # Write the train and validation information to tensorboard
             # writer = tf.summary.FileWriter(self.tbdir, sess.graph)
             # valwriter = tf.summary.FileWriter(self.tbvaldir)
@@ -152,6 +169,10 @@ class Train:
             timer.toc()
             iter += 1
 
+            # redirection
+            # r_obj = __redirection__()
+            # sys.stdout = r_obj
+
             # Display training information
             if iter % (cfg.FLAGS.display) == 0:
                 print('iter: %d / %d, total loss: %.6f\n >>> rpn_loss_cls: %.6f\n '
@@ -159,8 +180,10 @@ class Train:
                       (iter, cfg.FLAGS.max_iters, total_loss, rpn_loss_cls, rpn_loss_box, loss_cls, loss_box))
                 print('speed: {:.3f}s / iter'.format(timer.average_time))
 
+            # logs(r_obj)
+
             if iter % cfg.FLAGS.snapshot_iterations == 0:
-                self.snapshot(sess, iter )
+                self.snapshot(sess, iter)
 
     def get_variables_in_checkpoint_file(self, file_name):
         try:
