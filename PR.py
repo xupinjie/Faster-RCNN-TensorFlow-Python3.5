@@ -100,7 +100,7 @@ def getAP(precision, recall):
 
 
 if __name__ == '__main__':
-    classes = 'baby'
+    classes = 'gangjin'
     CLASS = classes
     threshold = 0.5
     # annotationpath = r'data\results\comp4_782f0b56-4218-4fd2-bfb8-60a39602e790_det_test_{}.txt'.format(classes)

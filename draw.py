@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import shutil
 
 import cv2
 import matplotlib.pyplot as plt
@@ -44,14 +45,13 @@ def vis_detections(im, class_name, dets, result_file, image_name, thresh=0.5):
     if len(inds) == 0:
         return
 
-    # im = im[:, :, (2, 1, 0)]
-    # fig, ax = plt.subplots(figsize=(12, 12))
-    # ax.imshow(im, aspect='equal')
+    im = im[:, :, (2, 1, 0)]
+    fig, ax = plt.subplots(figsize=(12, 12))
+    ax.imshow(im, aspect='equal')
     for i in inds:
         bbox = dets[i, :4]
         score = dets[i, -1]
 
-    '''
         ax.add_patch(
             plt.Rectangle((bbox[0], bbox[1]),
                           bbox[2] - bbox[0],
@@ -69,9 +69,10 @@ def vis_detections(im, class_name, dets, result_file, image_name, thresh=0.5):
                  fontsize=14)
     plt.axis('off')
     plt.tight_layout()
-    # plt.draw()
+    plt.draw()
     # plt.show()
-    '''
+    plt.savefig(r'output/result/{}'.format(image_name))
+
     result_file.write(image_name.replace('.jpg', '') +
                       ' ' + str(score) + ' ' + class_name +
                       ' ' + str(bbox[0]) + ' ' + str(bbox[1]) +
@@ -120,6 +121,20 @@ def parse_args():
     return args
 
 
+def copyfile(file):
+    print('copy_original_pic')
+    while 1:
+        im_name = file.readline().replace('\n', '') + ".jpg"
+        # print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        # print('Demo for data/demo/{}'.format(im_name))
+        if im_name == '.jpg':
+            break
+        shutil.copyfile(r'data\VOCdevkit2007\VOC2007\JPEGImages\{}'.format(im_name),
+                        r'output\result\{}'.format(im_name))
+    print('done.')
+    file.close()
+
+
 if __name__ == '__main__':
     args = parse_args()
 
@@ -157,6 +172,9 @@ if __name__ == '__main__':
 
     file = open(r"data/VOCdevkit2007/VOC2007/ImageSets/Main/test.txt")
     result = open(r"data/VOCdevkit2007/results/VOC2007/Main/result1.txt", 'w')
+    copyfile(file)
+
+    file = open(r"data/VOCdevkit2007/VOC2007/ImageSets/Main/test.txt")
     while 1:
         im_name = file.readline().replace('\n', '') + ".jpg"
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')

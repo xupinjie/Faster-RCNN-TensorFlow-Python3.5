@@ -17,19 +17,16 @@ This is the branch to compile Faster R-CNN on Windows and resolve some problem i
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Run `python setup.py build_ext install`
 
 5- Follow this instruction to download PyCoco database. [Link]( https://github.com/rbgirshick/py-faster-rcnn#beyond-the-demo-installation-for-training-and-testing-models)
-
-I will be glad if you can contribute with a batch script to automatically download and fetch. The final structure has to look like
-
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"data/VOCDevkit2007/annotations_cache"
-  
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"data/VOCDevkit2007/VOC2007"
   
 6- Download pre-trained VGG16 from [here](http://download.tensorflow.org/models/vgg_16_2016_08_28.tar.gz) and place it as "data\imagenet_weights\vgg16.ckpt"
  
  For rest of the models, please check [here](https://github.com/tensorflow/models/tree/master/research/slim#pre-trained-models)
  
-7- Run train.py
+7- Run `train.py` to train the model
   
-8- Run test.py
+8- Run `test.py` to get the result
 
-9- Run PR.py to get the mAP
+&nbsp;&nbsp;&nbsp;&nbsp;Run `PR.py` to get the mAP and PR curve
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;Run `draw.py` to draw the results in test set
